@@ -2,13 +2,12 @@ version: 0.2
 
 env:
   variables:
-    
+    AWS_DEFAULT_REGION: "us-east-1"  # Defined as variable since it's needed immediately
     CONTAINER_NAME: "webapp"
     IMAGE_TAG: "latest"
   parameter-store:
     AWS_ACCOUNT_ID: "/CodeBuild/AWS_ACCOUNT_ID"
     IMAGE_REPO_NAME: "/CodeBuild/IMAGE_REPO_NAME"
-    AWS_DEFAULT_REGION: "CodeBuild/AWS_DEFAULT_REGION"
 
 phases:
   pre_build:
@@ -16,11 +15,14 @@ phases:
       - echo "=== PRE-BUILD PHASE ==="
       - echo "Debug Info:"
       - echo "AWS Region: $AWS_DEFAULT_REGION"
+      
+      # First get parameters from SSM
+      - export AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "/CodeBuild/AWS_ACCOUNT_ID" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
+      - export IMAGE_REPO_NAME=$(aws ssm get-parameter --name "/CodeBuild/IMAGE_REPO_NAME" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
+      
       - echo "AWS Account: $AWS_ACCOUNT_ID"
       - echo "Image Repo: $IMAGE_REPO_NAME"
       - aws sts get-caller-identity
-      - aws ssm get-parameter --name "/CodeBuild/AWS_ACCOUNT_ID" --region $AWS_DEFAULT_REGION
-      - aws ssm get-parameter --name "/CodeBuild/IMAGE_REPO_NAME" --region $AWS_DEFAULT_REGION
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
