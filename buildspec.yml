@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    AWS_DEFAULT_REGION: "us-east-1"  # Defined as variable since it's needed immediately
+    AWS_DEFAULT_REGION: "us-east-1"
     CONTAINER_NAME: "webapp"
     IMAGE_TAG: "latest"
   parameter-store:
@@ -15,11 +15,9 @@ phases:
       - echo "=== PRE-BUILD PHASE ==="
       - echo "Debug Info:"
       - echo "AWS Region: $AWS_DEFAULT_REGION"
-      
-      # First get parameters from SSM
-      - export AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "/CodeBuild/AWS_ACCOUNT_ID" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
-      - export IMAGE_REPO_NAME=$(aws ssm get-parameter --name "/CodeBuild/IMAGE_REPO_NAME" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
-      
+      - echo "Retrieving parameters from SSM..."
+      - AWS_ACCOUNT_ID=$(aws ssm get-parameter --name "/CodeBuild/AWS_ACCOUNT_ID" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
+      - IMAGE_REPO_NAME=$(aws ssm get-parameter --name "/CodeBuild/IMAGE_REPO_NAME" --region $AWS_DEFAULT_REGION --query "Parameter.Value" --output text)
       - echo "AWS Account: $AWS_ACCOUNT_ID"
       - echo "Image Repo: $IMAGE_REPO_NAME"
       - aws sts get-caller-identity
