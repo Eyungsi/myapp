@@ -2,12 +2,13 @@ version: 0.2
 
 env:
   variables:
-    AWS_DEFAULT_REGION: "us-east-1"
+    
     CONTAINER_NAME: "webapp"
     IMAGE_TAG: "latest"
   parameter-store:
     AWS_ACCOUNT_ID: "/CodeBuild/AWS_ACCOUNT_ID"
     IMAGE_REPO_NAME: "/CodeBuild/IMAGE_REPO_NAME"
+    AWS_DEFAULT_REGION: "CodeBuild/AWS_DEFAULT_REGION"
 
 phases:
   pre_build:
