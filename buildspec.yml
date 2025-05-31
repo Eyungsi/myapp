@@ -3,11 +3,10 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: "us-east-1"
-    CONTAINER_NAME: "webapp"  # Moved to variables since it's not sensitive
+    CONTAINER_NAME: "webapp"
   parameter-store:
     AWS_ACCOUNT_ID: "/CodeBuild/AWS_ACCOUNT_ID"
     IMAGE_REPO_NAME: "/CodeBuild/IMAGE_REPO_NAME"
-    IMAGE_TAG: "latest"  # Changed to fixed value or use CODEBUILD_RESOLVED_SOURCE_VERSION
 
 phases:
   pre_build:
@@ -17,25 +16,18 @@ phases:
       - echo "AWS Region: $AWS_DEFAULT_REGION"
       - echo "AWS Account: $AWS_ACCOUNT_ID"
       - echo "Image Repo: $IMAGE_REPO_NAME"
-      - echo "Image Tag: $IMAGE_TAG"
-      
-      # Verify AWS permissions
       - aws sts get-caller-identity
-      
-      # Verify parameters exist
       - aws ssm get-parameter --name "/CodeBuild/AWS_ACCOUNT_ID" --region $AWS_DEFAULT_REGION
       - aws ssm get-parameter --name "/CodeBuild/IMAGE_REPO_NAME" --region $AWS_DEFAULT_REGION
-      
-      # ECR Login
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com || exit 1
-      - echo "Successfully logged in to ECR"
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
   build:
     commands:
       - echo "=== BUILD PHASE ==="
       - echo "Build started on $(date)"
       - echo "Building Docker image..."
+      - IMAGE_TAG=$(date +%Y%m%d%H%M%S)
       - docker build --platform=linux/amd64 -t $IMAGE_REPO_NAME:$IMAGE_TAG -f DockerfileProd .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
 
